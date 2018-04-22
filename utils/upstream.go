@@ -1,0 +1,27 @@
+package utils
+
+type OkexConfig struct {
+	Enabled   bool   `json:"enabled"`
+	ApiKey    string `json:"api_key"`
+	ApiSecret string `json:"api_secret"`
+}
+
+var (
+	okexConfig OkexConfig
+)
+
+func InitOkexConfig(OkexConf OkexConfig) {
+	okexConfig = OkexConf
+	if okexConfig.ApiKey == "" ||
+		okexConfig.ApiSecret == "" {
+		panic("okex config error")
+	}
+}
+
+func GetOkexKey() string {
+	return okexConfig.ApiKey
+}
+
+func GetOkexSecret() string {
+	return okexConfig.ApiSecret
+}

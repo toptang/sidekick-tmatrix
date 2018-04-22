@@ -1,0 +1,6 @@
+{
+	"http": {
+		"address": "string",
+		"port"; "int"
+	}
+}
