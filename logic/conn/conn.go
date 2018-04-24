@@ -22,19 +22,19 @@ var (
 type ConnManager interface {
 	RegisterConn(*websocket.Conn, string, string)
 	UnRegisterConn(*websocket.Conn, string, string)
-	DumpConns(string) map[string]*OKEKClient
+	DumpConns(string, string) map[string]*OKEXClient
 }
 
 //RemoteAddr + Contract
-type OKEKClient struct {
+type OKEXClient struct {
 	RemoteAddr string
 	Contract   string
 	Table      string
 	Conn       *websocket.Conn
 }
 
-func NewOKEKClient(addr string, contract string, table string, ws *websocket.Conn) *OKEKClient {
-	return &OKEKClient{
+func NewOKEXClient(addr string, contract string, table string, ws *websocket.Conn) *OKEXClient {
+	return &OKEXClient{
 		RemoteAddr: addr,
 		Contract:   contract,
 		Conn:       ws,
@@ -44,8 +44,8 @@ func NewOKEKClient(addr string, contract string, table string, ws *websocket.Con
 
 //register all upstream manager
 func Init(config app.Config) {
-	if config.UpstreamConf.OkekConf.Enabled {
-		okekManager := NewOKEKManager()
-		GConn.Store("okek", okekManager)
+	if config.UpstreamConf.OkexConf.Enabled {
+		okexManager := NewOKEXManager()
+		GConn.Store("okex", okexManager)
 	}
 }

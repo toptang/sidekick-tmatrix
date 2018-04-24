@@ -14,9 +14,9 @@ var (
 	DEFAULT_PERIOD = "this_week"
 	DEFAULT_DEPTH  = 5
 
-	HEALTH_CHECK_TIME  = 30 * time.Second
-	HEALTH_CHECK_RETRY = 3
-	HEALTH_GAP         = 40
+	HEALTH_CHECK_TIME        = 30 * time.Second
+	HEALTH_CHECK_RETRY       = 3
+	HEALTH_GAP         int64 = 40
 )
 
 //protocol uri

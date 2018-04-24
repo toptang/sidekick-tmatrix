@@ -2,49 +2,40 @@ package response
 
 import (
 	"encoding/json"
+	"sidekick/tmatrix/logic/service/svcerr"
+	"xframe/log"
 	"xframe/server/websocket"
 )
 
-var (
-	ERROR_MSG = "error"
-)
-
 type BaseResponse struct {
-	Msg     string `json:"msg"`
-	RetCode int    `json:"retcode"`
-	Message string `json:"message"`
-}
-
-//TODO: 上游数据格式
-type Pricing struct {
-}
-
-type DataResponse struct {
 	Msg  string `json:"msg"`
-	Data struct {
-		Market string `json:"market"`
-		Pricing
-	} `json:"data"`
+	Err  string `json:"err"`
+	Uuid string `json:"uuid"`
+}
+
+//NEVER USED
+type DataResponse struct {
+	Msg string `json:"msg"`
 }
 
 //-------------------------
 
-func formatBaseResponse(route string, retcode int) (res []byte, err error) {
+func formatBaseResponse(route string, retcode int, uuid string) (res []byte, err error) {
 	var message string
-	if retcode != err.SUCCESS {
-		message = err.ErrMap[retcode]
+	if retcode != svcerr.SUCCESS {
+		message = svcerr.ErrMap[retcode]
 	}
 	var baseResponse = BaseResponse{
-		Msg:     route,
-		RetCode: retcode,
-		Message: message,
+		Msg:  route,
+		Err:  message,
+		Uuid: uuid,
 	}
 	res, err = json.Marshal(baseResponse)
 	return
 }
 
-func DoBaseResponse(route string, retcode int, ws *websocket.Conn) {
-	res, err := formatBaseResponse(route, retcode)
+func DoBaseResponse(route string, retcode int, uuid string, ws *websocket.Conn) {
+	res, err := formatBaseResponse(route, retcode, uuid)
 	if err != nil {
 		log.ERRORF("[response]send response error: %v, retcode: %d", err, route)
 		return

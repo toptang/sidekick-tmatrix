@@ -1,4 +1,4 @@
-SRCDIRS_EXCLUDE = test utils proto scripts vendor examples schema build deploy 
+SRCDIRS_EXCLUDE = test utils proto scripts vendor examples schema build deploy logic
 SRCDIRS_ALL = $(sort $(subst /,,$(dir $(wildcard */*))))
 SRCDIRS = $(filter-out $(SRCDIRS_EXCLUDE), $(SRCDIRS_ALL))
 
@@ -7,14 +7,12 @@ PKGDIRS_ALL = $(addsuffix /pkg, $(subst :, ,$(GOPATH)))
 PKGDIRS = $(filter-out $(PKGDIRS_EXCLUDE), $(PKGDIRS_ALL))
 
 all: build_main 
-    @for subdir in $(SRCDIRS);do \
-        cd $$subdir; go install; cd ..; \
-    done 
-
-#@CGO_ENABLED=0 go build -ldflags "$(GOLDFLAG)" -o slave-agent main.go;
+	@for subdir in $(SRCDIRS);do \
+		cd $$subdir; go install; cd ..; \
+	done 
 
 build_main: 
-    @CGO_ENABLED=0 go build -o build/tmatrix main.go;
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build/tmatrix main.go;
 
 show:
     @echo "==================src====================="

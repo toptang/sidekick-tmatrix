@@ -4,17 +4,21 @@ import (
 	"flag"
 	"fmt"
 	"sidekick/tmatrix/app"
+	"sidekick/tmatrix/logic/api"
+	"sidekick/tmatrix/logic/conn"
+	_ "sidekick/tmatrix/logic/service"
 	"sidekick/tmatrix/utils"
+	"xframe/config"
 	"xframe/server"
 )
 
 var (
-	config = flag.String("c", "", "configuration file path")
+	conf = flag.String("c", "", "configuration file path")
 )
 
 func main() {
 	var app app.Config
-	err := config.LoadConfigFromFileV2(&app, *config)
+	err := config.LoadConfigFromFileV2(&app, *conf)
 
 	//TODO  use errd
 	if err != nil {
@@ -27,8 +31,14 @@ func main() {
 	//init log
 	utils.InitLog(app.LogConf)
 
+	//init conn manager
+	conn.Init(app)
+
+	//init api manager
+	api.Init(app)
+
 	//start service
-	if err = server.RunHTTP(utils.GetAddress(), utils.GetPort()); err != nil {
+	if err = server.RunHTTP(utils.GetAddr(), utils.GetPort()); err != nil {
 		panic(fmt.Sprintf("run tmatric service error: %v", err))
 	}
 }

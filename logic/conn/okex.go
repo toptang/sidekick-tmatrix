@@ -6,57 +6,57 @@ import (
 )
 
 type OpReq struct {
-	client  *OKEKClient
+	client  *OKEXClient
 	msg     string
-	retChan chan interface{}
+	retChan chan map[string]*OKEXClient
 }
 
 /*
- * OKEK连接管理
+ * OKEX连接管理
  * - 添加客户端连接(SUB)
  * - 删除客户端连接(UNSUB)
  * - 收上游推送消息 -> 广播客户端
  */
-type OKEKManager struct {
+type OKEXManager struct {
 	inputChan chan []byte
 
-	ClientLst map[string]map[string]*OKEKClient //key: contract|table
+	ClientLst map[string]map[string]*OKEXClient //key: contract|table
 
 	opChan chan OpReq
 }
 
 //TODO: try to use sync.Map
 //      abstract table struct
-func NewOKEKManager() *OKEKManager {
-	om := new(OKEKManager)
-	om.ClientLst = make(map[string]map[string]*OKEKClient) //sub-key:remoteaddr
+func NewOKEXManager() *OKEXManager {
+	om := new(OKEXManager)
+	om.ClientLst = make(map[string]map[string]*OKEXClient) //sub-key:remoteaddr
 	om.opChan = make(chan OpReq)
 	om.RunOp()
 	return om
 }
 
-func (this *OKEKManager) RunOp() {
+func (this *OKEXManager) RunOp() {
 	for {
 		select {
 		case req := <-this.opChan:
 			contract := req.client.Contract
 			table := req.client.Table
-			remoteAddr = req.client.RemoteAddr
+			remoteAddr := req.client.RemoteAddr
 			key := this.getKey(contract, table)
 
 			switch req.msg {
 			case REGISTER_ROUTE:
-				if okekCliMap, ok := this.ClientLst[key]; !ok {
-					this.ClientLst[key] = make(map[string]*OKEKClient)
+				if okexCliMap, ok := this.ClientLst[key]; !ok {
+					this.ClientLst[key] = make(map[string]*OKEXClient)
 					this.ClientLst[key][remoteAddr] = req.client
 				} else {
-					if _, ok := okekCliMap[remoteAddr]; !ok {
+					if _, ok := okexCliMap[remoteAddr]; !ok {
 						this.ClientLst[key][remoteAddr] = req.client
 					}
 				}
 			case UNREGISTER_ROUTE:
-				if okekCliMap, ok := this.ClientLst[key]; ok {
-					delete(okekCliMap, remoteAddr)
+				if okexCliMap, ok := this.ClientLst[key]; ok {
+					delete(okexCliMap, remoteAddr)
 				}
 			case DUMP_ROUTE:
 				req.retChan <- this.ClientLst[key]
@@ -65,10 +65,10 @@ func (this *OKEKManager) RunOp() {
 	}
 }
 
-func (this *OKEKManager) RegisterConn(ws *websocket.Conn, contract string, table string) {
-	okekClient := NewOKEKClient(ws.RemoteAddr(), contract, table, ws)
+func (this *OKEXManager) RegisterConn(ws *websocket.Conn, contract string, table string) {
+	okexClient := NewOKEXClient(ws.RemoteAddr().String(), contract, table, ws)
 	var opReq = OpReq{
-		client: okekClient,
+		client: okexClient,
 		msg:    REGISTER_ROUTE,
 	}
 	go func() {
@@ -76,10 +76,10 @@ func (this *OKEKManager) RegisterConn(ws *websocket.Conn, contract string, table
 	}()
 }
 
-func (this *OKEKManager) UnRegisterConn(ws *websocket.Conn, contract string, table string) {
-	okekClient := NewOKEKClient(ws.RemoteAddr, contract, table, ws)
+func (this *OKEXManager) UnRegisterConn(ws *websocket.Conn, contract string, table string) {
+	okexClient := NewOKEXClient(ws.RemoteAddr().String(), contract, table, ws)
 	var opReq = OpReq{
-		client: okekClient,
+		client: okexClient,
 		msg:    UNREGISTER_ROUTE,
 	}
 	go func() {
@@ -87,11 +87,11 @@ func (this *OKEKManager) UnRegisterConn(ws *websocket.Conn, contract string, tab
 	}()
 }
 
-func (this *OKEKManager) DumpConns(contract string, table string) map[string]*OKEKClient {
-	okekClient := NewOKEKClient("", contract, table, nil)
-	rCh := make(chan interface{})
+func (this *OKEXManager) DumpConns(contract string, table string) map[string]*OKEXClient {
+	okexClient := NewOKEXClient("", contract, table, nil)
+	rCh := make(chan map[string]*OKEXClient)
 	var opReq = OpReq{
-		client:  okekClient,
+		client:  okexClient,
 		msg:     DUMP_ROUTE,
 		retChan: rCh,
 	}
@@ -104,6 +104,6 @@ func (this *OKEKManager) DumpConns(contract string, table string) map[string]*OK
 	}
 }
 
-func (this *OKEKManager) getKey(contract string, table string) string {
+func (this *OKEXManager) getKey(contract string, table string) string {
 	return fmt.Sprintf("%s|%s", contract, table)
 }

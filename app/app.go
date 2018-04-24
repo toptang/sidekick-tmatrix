@@ -6,6 +6,6 @@ type Config struct {
 	HttpConf     utils.HttpConfig `json:"http"`
 	LogConf      utils.LogConfig  `json:"log"`
 	UpstreamConf struct {
-		OkexConf OkexConfig `json:"okex"`
+		OkexConf utils.OkexConfig `json:"okex"`
 	} `json:"upstream"`
 }

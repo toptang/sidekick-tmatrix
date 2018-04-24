@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sidekick/tmatrix/utils"
 	"sort"
 	"strings"
 	"xframe/server/websocket"
@@ -21,17 +22,17 @@ func (this *OkexApi) SendPingPong(wsConn *websocket.Conn) {
 func (this *OkexApi) SendFutureUsed(contract string, wsConn *websocket.Conn) {
 	//signature
 	params := map[string]string{
-		"api_key": utils.GetOkExKey(),
+		"api_key": utils.GetOkexKey(),
 	}
-	sign := this.Sign(params, utils.GetOkExSecret())
+	sign := this.Sign(params, utils.GetOkexSecret())
 	param := Param{
-		ApiKey: utils.GetOkExKey(),
+		ApiKey: utils.GetOkexKey(),
 		Sign:   sign,
 	}
 	dataReq := DataRequest{
 		Event:   "addChannel",
 		Channel: fmt.Sprintf(OKEX_OB, contract, DEFAULT_PERIOD, DEFAULT_DEPTH),
-		Params:  params,
+		Params:  param,
 	}
 	buf, _ := json.Marshal(dataReq)
 	wsConn.Write(buf)
@@ -50,8 +51,8 @@ func (this *OkexApi) Sign(params map[string]string, api_secret string) string {
 		sortParams += key + "=" + params[key] + "&"
 	}
 	sortParams += "secret_key=" + api_secret
-	h := md5.New(nil)
+	h := md5.New()
 	io.WriteString(h, sortParams)
-	sign := strings.ToUpper(fmt.Printf("%x", h.Sum(nil)))
+	sign := strings.ToUpper(fmt.Sprintf("%x", h.Sum(nil)))
 	return sign
 }
