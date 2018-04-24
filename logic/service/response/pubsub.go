@@ -26,7 +26,7 @@ func formatBaseResponse(route string, retcode int, uuid string) (res []byte, err
 		message = svcerr.ErrMap[retcode]
 	}
 	var baseResponse = BaseResponse{
-		Msg:  route,
+		Msg:  "r" + route,
 		Err:  message,
 		Uuid: uuid,
 	}
