@@ -32,13 +32,14 @@ type OkexApi struct {
 
 func NewOkexApi() *OkexApi {
 	oa := new(OkexApi)
+	oa.upstreamConns = make(map[string]*OkexConn)
 	return oa
 }
 
 func (this *OkexApi) Start(contract string, table string) error {
 	//check conn existence
 	key := this.getKey(contract, table)
-	if _, ok := this.checkExt(key); !ok {
+	if _, ok := this.checkExt(key); ok {
 		log.WARNF("[okexapi_start]duplicate sub req for %s-%s", contract, table)
 		return nil
 	}
@@ -51,6 +52,7 @@ func (this *OkexApi) Start(contract string, table string) error {
 	this.Lock()
 	this.upstreamConns[key] = okexConn
 	this.Unlock()
+	log.DEBUG(this.upstreamConns)
 	//start sub and health check
 	go this.Sub(contract, table, okexConn)
 	return nil
@@ -120,6 +122,7 @@ func (this *OkexApi) Sub(contract string, table string, okexConn *OkexConn) {
 				okexConn.Health = true
 				okexConn.HealthTime = time.Now().Unix()
 				count = 0
+				break
 			}
 			//check data
 			//TODO channel(table) route
@@ -128,6 +131,7 @@ func (this *OkexApi) Sub(contract string, table string, okexConn *OkexConn) {
 				log.ERRORF("[okexapi]receive data empty")
 				break
 			}
+			log.DEBUG(dataRes)
 			if okexManager, ok := conn.GConn.Load(key); ok {
 				cliLst := okexManager.(conn.ConnManager).DumpConns(contract, table)
 				if len(cliLst) == 0 {

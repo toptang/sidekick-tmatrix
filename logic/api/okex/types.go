@@ -4,7 +4,7 @@ import "time"
 
 //basic fixed config
 var (
-	OKEX_SERVER = "real.okex.com:10440"
+	OKEX_SERVER = "wss://real.okex.com:10440"
 	OKEX_URI    = "/websocket/okexapi"
 	PROTO_WS    = "ws"
 	PROTO_WSS   = "wss"
