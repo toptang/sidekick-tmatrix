@@ -46,6 +46,26 @@ type PingPongResponse struct {
 }
 
 type DataResponse struct {
-	Channel string      `json:"channel"`
-	Data    interface{} `json:"data"`
+	Channel string `json:"channel"`
+	Data    Quote  `json:"data"`
+}
+
+type Quote struct {
+	Ts   int64       `json:"timestamp"`
+	Asks interface{} `json:"asks"`
+	Bids interface{} `json:"bids"`
+}
+
+type QuotePush struct {
+	Ts       int64       `json:"ts"`
+	Asks     interface{} `json:"asks"`
+	Bids     interface{} `json:"bids"`
+	Contract string      `json:"symbol"`
+}
+
+type DataPush struct {
+	Msg    string      `json:"msg"`
+	Market string      `json:"market"`
+	Table  string      `json:"table"`
+	Data   []QuotePush `json:"data"`
 }

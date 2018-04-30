@@ -1,6 +1,16 @@
 {
 	"http": {
 		"address": "string",
-		"port"; "int"
+		"port": "int"
+	},
+	"log": {
+		"log_level": "string"
+	},
+	"upstream": {
+		"okex": {
+			"enabled": "bool",
+			"api_key": "string",
+			"api_secret": "string"
+		}
 	}
 }

@@ -3,6 +3,7 @@ package conn
 import (
 	"sidekick/tmatrix/app"
 	"sync"
+	"xframe/log"
 	"xframe/server/websocket"
 )
 
@@ -45,6 +46,7 @@ func NewOKEXClient(addr string, contract string, table string, ws *websocket.Con
 //register all upstream manager
 func Init(config app.Config) {
 	if config.UpstreamConf.OkexConf.Enabled {
+		log.DEBUG("load okex manager")
 		okexManager := NewOKEXManager()
 		GConn.Store("okex", okexManager)
 	}

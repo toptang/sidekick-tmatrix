@@ -7,10 +7,15 @@ import (
 	"xframe/server/websocket"
 )
 
+type ErrS struct {
+	Code   int    `json:"code"`
+	ErrMsg string `json:"what"`
+}
+
 type BaseResponse struct {
 	Msg  string `json:"msg"`
-	Err  string `json:"err"`
 	Uuid string `json:"uuid"`
+	Err  ErrS   `json:"err"`
 }
 
 //NEVER USED
@@ -25,10 +30,14 @@ func formatBaseResponse(route string, retcode int, uuid string) (res []byte, err
 	if retcode != svcerr.SUCCESS {
 		message = svcerr.ErrMap[retcode]
 	}
+	errS := ErrS{
+		Code:   retcode,
+		ErrMsg: message,
+	}
 	var baseResponse = BaseResponse{
-		Msg:  "r" + route,
-		Err:  message,
+		Msg:  "rsp" + route,
 		Uuid: uuid,
+		Err:  errS,
 	}
 	res, err = json.Marshal(baseResponse)
 	return

@@ -58,6 +58,26 @@ func (this *OkexApi) Start(contract string, table string) error {
 	return nil
 }
 
+func (this *OkexApi) generatePushData(dataRes []DataResponse, market string, contract string, table string) ([]byte, error) {
+	var (
+		dataPush DataPush
+	)
+	dataPush.Msg = "quote"
+	dataPush.Market = market
+	dataPush.Table = table
+	dataPush.Data = make([]QuotePush, 0)
+	for _, data := range dataRes {
+		var tmpQuotePush QuotePush
+		tmpQuotePush.Ts = data.Data.Ts
+		tmpQuotePush.Asks = data.Data.Asks
+		tmpQuotePush.Bids = data.Data.Bids
+		tmpQuotePush.Contract = contract
+		dataPush.Data = append(dataPush.Data, tmpQuotePush)
+	}
+	buf, err := json.Marshal(dataPush)
+	return buf, err
+}
+
 func (this *OkexApi) Sub(contract string, table string, okexConn *OkexConn) {
 	ticker := time.NewTicker(HEALTH_CHECK_TIME)
 	defer ticker.Stop()
@@ -65,6 +85,7 @@ func (this *OkexApi) Sub(contract string, table string, okexConn *OkexConn) {
 		key   = this.getKey(contract, table)
 		count = 0
 	)
+	log.DEBUGF("[okexapi]key: %s", key)
 	//sub process
 	switch table {
 	case "orderbook":
@@ -131,22 +152,31 @@ func (this *OkexApi) Sub(contract string, table string, okexConn *OkexConn) {
 				log.ERRORF("[okexapi]receive data empty")
 				break
 			}
-			log.DEBUG(dataRes)
-			if okexManager, ok := conn.GConn.Load(key); ok {
-				cliLst := okexManager.(conn.ConnManager).DumpConns(contract, table)
+			log.DEBUG("[okexapi]data from okex:", dataRes)
+			if okexManager, ok := conn.GConn.Load("okex"); ok {
+				log.DEBUG("[okexapi]start to dump okex client list")
+				cliLst := okexManager.(*conn.OKEXManager).DumpConns(contract, table)
+				log.DEBUGF("[okexapi]okex client list: %v", cliLst)
 				if len(cliLst) == 0 {
 					this.Lock()
 					delete(this.upstreamConns, key)
 					this.Unlock()
 					okexConn.WsConn.Close()
 				}
+				//generate push data
+				pushBuf, err := this.generatePushData(dataRes, "okex", contract, table)
+				if err != nil {
+					log.ERRORF("[okexapi]generate push data error: %v", err)
+					break
+				}
 				for _, cli := range cliLst {
-					go func() {
+					log.DEBUGF("[okexapi]send to client: %v", cli)
+					go func(buf []byte) {
 						_, err := cli.Conn.Write(buf)
 						if err != nil {
 							log.ERRORF("[okexapi_sub] send data to client error: %v, addr: %s, contract: %s, table: %s", err, cli.RemoteAddr, contract, table)
 						}
-					}()
+					}(pushBuf)
 				}
 			}
 		}

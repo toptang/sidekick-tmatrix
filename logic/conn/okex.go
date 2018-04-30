@@ -2,6 +2,7 @@ package conn
 
 import (
 	"fmt"
+	"xframe/log"
 	"xframe/server/websocket"
 )
 
@@ -31,11 +32,12 @@ func NewOKEXManager() *OKEXManager {
 	om := new(OKEXManager)
 	om.ClientLst = make(map[string]map[string]*OKEXClient) //sub-key:remoteaddr
 	om.opChan = make(chan OpReq)
-	om.RunOp()
+	go om.RunOp()
 	return om
 }
 
 func (this *OKEXManager) RunOp() {
+	log.DEBUG("[okex_manager]start run op")
 	for {
 		select {
 		case req := <-this.opChan:
@@ -46,18 +48,20 @@ func (this *OKEXManager) RunOp() {
 
 			switch req.msg {
 			case REGISTER_ROUTE:
+				log.DEBUG("[okex_manager]register conn")
 				if okexCliMap, ok := this.ClientLst[key]; !ok {
 					this.ClientLst[key] = make(map[string]*OKEXClient)
 					this.ClientLst[key][remoteAddr] = req.client
 				} else {
-					if _, ok := okexCliMap[remoteAddr]; !ok {
-						this.ClientLst[key][remoteAddr] = req.client
-					}
+					okexCliMap[remoteAddr] = req.client
 				}
+				log.DEBUG("[okex_manager]", this.ClientLst)
 			case UNREGISTER_ROUTE:
+				log.DEBUG("[okex_manager]unregister conn")
 				if okexCliMap, ok := this.ClientLst[key]; ok {
 					delete(okexCliMap, remoteAddr)
 				}
+				log.DEBUG("[okex_manager]", this.ClientLst)
 			case DUMP_ROUTE:
 				req.retChan <- this.ClientLst[key]
 			}
@@ -66,6 +70,7 @@ func (this *OKEXManager) RunOp() {
 }
 
 func (this *OKEXManager) RegisterConn(ws *websocket.Conn, contract string, table string) {
+	log.DEBUGF("[okex_manager]register conn for contract %s and table %s", contract, table)
 	okexClient := NewOKEXClient(ws.RemoteAddr().String(), contract, table, ws)
 	var opReq = OpReq{
 		client: okexClient,
@@ -77,6 +82,7 @@ func (this *OKEXManager) RegisterConn(ws *websocket.Conn, contract string, table
 }
 
 func (this *OKEXManager) UnRegisterConn(ws *websocket.Conn, contract string, table string) {
+	log.DEBUGF("[okex_manager]unregister conn for contract %s and table %s", contract, table)
 	okexClient := NewOKEXClient(ws.RemoteAddr().String(), contract, table, ws)
 	var opReq = OpReq{
 		client: okexClient,
@@ -95,9 +101,9 @@ func (this *OKEXManager) DumpConns(contract string, table string) map[string]*OK
 		msg:     DUMP_ROUTE,
 		retChan: rCh,
 	}
-	go func() {
-		this.opChan <- opReq
-	}()
+	go func(data OpReq) {
+		this.opChan <- data
+	}(opReq)
 	select {
 	case res := <-rCh:
 		return res

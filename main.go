@@ -8,6 +8,7 @@ import (
 	"sidekick/tmatrix/logic/conn"
 	_ "sidekick/tmatrix/logic/service"
 	"sidekick/tmatrix/utils"
+	"xframe/cmd"
 	"xframe/config"
 	"xframe/server"
 )
@@ -17,6 +18,8 @@ var (
 )
 
 func main() {
+	cmd.ParseCommand()
+	cmd.DumpCommand()
 	var app app.Config
 	err := config.LoadConfigFromFileV2(&app, *conf)
 
