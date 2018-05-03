@@ -38,6 +38,9 @@ func _wsOnMessages(ws *websocket.Conn) {
 		)
 		err := websocket.Message.Receive(ws, &buf)
 		if err != nil {
+			/* TODO optimization connection management
+			 *      right now, have no data of market, contract and table when conn closed in client side
+			 */
 			log.WARNF("[_wsOnMessages]websocket client receive error: %v", err)
 			return
 		}

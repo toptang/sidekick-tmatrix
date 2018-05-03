@@ -18,8 +18,11 @@ var (
 )
 
 func main() {
+	//init commandLine
 	cmd.ParseCommand()
 	cmd.DumpCommand()
+
+	//init configuration
 	var app app.Config
 	err := config.LoadConfigFromFileV2(&app, *conf)
 
@@ -41,7 +44,7 @@ func main() {
 	api.Init(app)
 
 	//start service
-	if err = server.RunHTTP(utils.GetAddr(), utils.GetPort()); err != nil {
+	if err = server.RunHTTP(utils.GetHttpAddr(), utils.GetHttpPort()); err != nil {
 		panic(fmt.Sprintf("run tmatric service error: %v", err))
 	}
 }

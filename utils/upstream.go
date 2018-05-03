@@ -1,7 +1,7 @@
 package utils
 
 type OkexConfig struct {
-	Enabled   bool   `json:"enabled"`
+	Enabled   bool   `json:"enabled"` //used for register okex upstream websocket and connection manager
 	ApiKey    string `json:"api_key"`
 	ApiSecret string `json:"api_secret"`
 }

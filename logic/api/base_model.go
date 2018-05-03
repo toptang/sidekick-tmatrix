@@ -2,7 +2,7 @@ package api
 
 import (
 	"sidekick/tmatrix/app"
-	okexapi "sidekick/tmatrix/logic/api/okex"
+	"sidekick/tmatrix/logic/api/okexapi"
 	"sync"
 	"xframe/log"
 )
@@ -12,7 +12,7 @@ var (
 )
 
 type BaseApi interface {
-	Start(string, string)
+	Start(string, string, string) error
 }
 
 func Init(config app.Config) {

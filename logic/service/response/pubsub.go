@@ -18,20 +18,19 @@ type BaseResponse struct {
 	Err  ErrS   `json:"err"`
 }
 
-//NEVER USED
-type DataResponse struct {
-	Msg string `json:"msg"`
-}
-
 //-------------------------
 
 func formatBaseResponse(route string, retcode int, uuid string) (res []byte, err error) {
-	var message string
+	var (
+		message string
+		rspCode int = retcode
+	)
 	if retcode != svcerr.SUCCESS {
+		rspCode = -1 * retcode
 		message = svcerr.ErrMap[retcode]
 	}
 	errS := ErrS{
-		Code:   retcode,
+		Code:   rspCode,
 		ErrMsg: message,
 	}
 	var baseResponse = BaseResponse{

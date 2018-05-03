@@ -17,10 +17,10 @@ func InitHttp(httpConf HttpConfig) {
 	}
 }
 
-func GetAddr() string {
+func GetHttpAddr() string {
 	return httpConfig.Addr
 }
 
-func GetPort() int {
+func GetHttpPort() int {
 	return httpConfig.Port
 }
