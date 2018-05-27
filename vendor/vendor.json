@@ -1,0 +1,215 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "B6ZUzckOOwd699eDnJIPqDiWB0I=",
+			"origin": "xframe/vendor/github.com/apache/thrift/lib/go/thrift",
+			"path": "github.com/apache/thrift/lib/go/thrift",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "W7DNxQwdGQ2YO3PR3jARJg6Iqsw=",
+			"origin": "xframe/vendor/github.com/codahale/hdrhistogram",
+			"path": "github.com/codahale/hdrhistogram",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "+NJzbj9fa71GPyEhyYcB2urBiXY=",
+			"origin": "xframe/vendor/github.com/juju/ratelimit",
+			"path": "github.com/juju/ratelimit",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "c3phx+BWGWXSSlbAZ5K4tGn0WS4=",
+			"origin": "xframe/vendor/github.com/opentracing-contrib/go-stdlib/nethttp",
+			"path": "github.com/opentracing-contrib/go-stdlib/nethttp",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "hpXnjCM/a0edhWUb2+and0mnPyY=",
+			"origin": "xframe/vendor/github.com/opentracing/opentracing-go",
+			"path": "github.com/opentracing/opentracing-go",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "uhDxBvLEqRAMZKgpTZ8MFuLIIM8=",
+			"origin": "xframe/vendor/github.com/opentracing/opentracing-go/ext",
+			"path": "github.com/opentracing/opentracing-go/ext",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "tnkdNJbJxNKuPZMWapP1xhKIIGw=",
+			"origin": "xframe/vendor/github.com/opentracing/opentracing-go/log",
+			"path": "github.com/opentracing/opentracing-go/log",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "ZSd8suBV8ksW7xsebrDOkFSpgVI=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go",
+			"path": "github.com/uber/jaeger-client-go",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "pJXllhzxJ1Y0oK3PxG1QL8d7UYg=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/config",
+			"path": "github.com/uber/jaeger-client-go/config",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "KM5UXTWkHULmw0dDRNuk8ogWyGs=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/internal/baggage",
+			"path": "github.com/uber/jaeger-client-go/internal/baggage",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "tZqlcHV1XoLdZp9jfnydzsZAvYo=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/internal/baggage/remote",
+			"path": "github.com/uber/jaeger-client-go/internal/baggage/remote",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "QB0L0GrzyMGQp6ivkkxp7a1DPsE=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/internal/spanlog",
+			"path": "github.com/uber/jaeger-client-go/internal/spanlog",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "igfJEOO6Ti7kv3S5aWVIqMToMQ4=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/log",
+			"path": "github.com/uber/jaeger-client-go/log",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "j4WrA/B2SJCqHxttCQ+TYbmtQqE=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/rpcmetrics",
+			"path": "github.com/uber/jaeger-client-go/rpcmetrics",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "x70FHhaTJkyGDNVd1XRjseXN/yg=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/thrift-gen/agent",
+			"path": "github.com/uber/jaeger-client-go/thrift-gen/agent",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "8GTKyCm4OZPKDcaLxt+qxy1Mk/w=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/thrift-gen/baggage",
+			"path": "github.com/uber/jaeger-client-go/thrift-gen/baggage",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "TOIiprC8gAUlC/VVEpeMR6bIg8A=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/thrift-gen/jaeger",
+			"path": "github.com/uber/jaeger-client-go/thrift-gen/jaeger",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "bUNRwq+ZuDfL/Pk74LDnch+l+U8=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/thrift-gen/sampling",
+			"path": "github.com/uber/jaeger-client-go/thrift-gen/sampling",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "XlbTGfqnmRg/rIOb82+KvcFsHjY=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/thrift-gen/zipkincore",
+			"path": "github.com/uber/jaeger-client-go/thrift-gen/zipkincore",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "XIdjKkKWZNkqqDZiBA3nsBYzZZQ=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-client-go/utils",
+			"path": "github.com/uber/jaeger-client-go/utils",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "z4DF82cnUyK6neYNTFpyRHHXvNE=",
+			"origin": "xframe/vendor/github.com/uber/jaeger-lib/metrics",
+			"path": "github.com/uber/jaeger-lib/metrics",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",
+			"origin": "xframe/vendor/golang.org/x/net/context",
+			"path": "golang.org/x/net/context",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "m0KKIHmHHnH8a/KGAb62kFDwEkk=",
+			"path": "xframe/cmd",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "jMUuB421KRN6KKg/iOqo83VZgJM=",
+			"path": "xframe/config",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "/lnvypGD6K2EeyADjSCV7V/Z6cw=",
+			"path": "xframe/handler/handler_common",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "FIop6Zk1b+dupC4ebCB8ypvnHPk=",
+			"path": "xframe/handler/websocket_handler",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "px1sHsjJr+nbquSeik7IWwjQ7Ac=",
+			"path": "xframe/log",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "DiE0KIgGbkGrhFntClSWCGLDzCY=",
+			"path": "xframe/server",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "2T/mw+UhCB/I6Jvw/CncilouCyE=",
+			"path": "xframe/server/websocket",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "qpxYvW387t1Tk++AbVG5AL5II8Y=",
+			"path": "xframe/trace",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		},
+		{
+			"checksumSHA1": "uB/7D9A/G+qTF7H16JKSZUZzMKw=",
+			"path": "xframe/utils",
+			"revision": "916579bbd2c69f7c79bfb5daf356a0d26acf825b",
+			"revisionTime": "2018-05-03T11:34:14Z"
+		}
+	],
+	"rootPath": "sidekick/tmatrix"
+}

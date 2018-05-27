@@ -80,3 +80,20 @@ type DataPush struct {
 	Table  string      `json:"table"`
 	Data   []QuotePush `json:"data"`
 }
+
+//-----------------
+type ChannelRes struct {
+	Channel string `json:"channel"`
+}
+
+//-----------------
+type DataCommonRes struct {
+	Channel string      `json:"channel"`
+	Data    interface{} `json:"data"`
+}
+
+type DataCommonPush struct {
+	Msg   string `json:"msg"`
+	Table string `json:"table"`
+	Data  []interface{}
+}

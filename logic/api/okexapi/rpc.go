@@ -38,6 +38,24 @@ func (this *OkexApi) SendFutureUsed(contract string, ttype string, wsConn *webso
 	wsConn.Write(buf)
 }
 
+func (this *OkexApi) SendLogin(wsConn *websocket.Conn) {
+	//signature
+	params := map[string]string{
+		"api_key": utils.GetOkexKey(),
+	}
+	sign := this.Sign(params, utils.GetOkexSecret())
+	param := Param{
+		ApiKey: utils.GetOkexKey(),
+		Sign:   sign,
+	}
+	dataReq := DataRequest{
+		Event:  "login",
+		Params: param,
+	}
+	buf, _ := json.Marshal(dataReq)
+	wsConn.Write(buf)
+}
+
 func (this *OkexApi) Sign(params map[string]string, api_secret string) string {
 	var (
 		keyLst     = make([]string, 0)
