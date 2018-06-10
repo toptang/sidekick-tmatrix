@@ -19,7 +19,7 @@ func (this *OkexApi) SendPingPong(wsConn *websocket.Conn) {
 	wsConn.Write(buf)
 }
 
-func (this *OkexApi) SendFutureUsed(contract string, ttype string, wsConn *websocket.Conn) {
+func (this *OkexApi) SendFutureUsed(contract string, ttype string, wsConn *websocket.Conn, depth int) {
 	//signature
 	params := map[string]string{
 		"api_key": utils.GetOkexKey(),
@@ -31,7 +31,25 @@ func (this *OkexApi) SendFutureUsed(contract string, ttype string, wsConn *webso
 	}
 	dataReq := DataRequest{
 		Event:   "addChannel",
-		Channel: fmt.Sprintf(OKEX_OB, contract, ttype, DEFAULT_DEPTH),
+		Channel: fmt.Sprintf(OKEX_OB, contract, ttype, depth),
+		Params:  param,
+	}
+	buf, _ := json.Marshal(dataReq)
+	wsConn.Write(buf)
+}
+
+func (this *OkexApi) SendFutureUsdTicker(contract string, ttype string, wsConn *websocket.Conn) {
+	params := map[string]string{
+		"api_key": utils.GetOkexKey(),
+	}
+	sign := this.Sign(params, utils.GetOkexSecret())
+	param := Param{
+		ApiKey: utils.GetOkexKey(),
+		Sign:   sign,
+	}
+	dataReq := DataRequest{
+		Event:   "addChannel",
+		Channel: fmt.Sprintf(OKEX_TICKER, contract, ttype),
 		Params:  param,
 	}
 	buf, _ := json.Marshal(dataReq)

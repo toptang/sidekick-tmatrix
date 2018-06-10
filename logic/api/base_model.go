@@ -12,7 +12,7 @@ var (
 )
 
 type BaseApi interface {
-	Start(string, string, string) error
+	Start(string, string, string, int, string) error
 }
 
 func Init(config app.Config) {

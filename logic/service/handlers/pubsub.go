@@ -43,9 +43,9 @@ func SubMsg(msgChan chan []byte, msg interface{}, ws interface{}) {
 	} else {
 		//start upstream client
 		baseApi := apicli.(api.BaseApi)
-		go baseApi.Start(req.Data.Symbol, req.Data.Table, req.Data.Type)
+		go baseApi.Start(req.Data.Symbol, req.Data.Table, req.Data.Type, req.Data.Optional.Depth, req.Data.Optional.Period)
 	}
-	log.INFOF("[sub_msg]complete sub in market: %s, symbol: %s, table: %s, type: %s", req.Data.Market, req.Data.Symbol, req.Data.Table, req.Data.Type)
+	log.INFOF("[sub_msg]complete sub in market: %s, symbol: %s, table: %s, type: %s, depth: %d, period: %s", req.Data.Market, req.Data.Symbol, req.Data.Table, req.Data.Type, req.Data.Optional.Depth, req.Data.Optional.Period)
 	response.DoBaseResponse(req.Msg, svcerr.SUCCESS, req.Uuid, ws.(*websocket.Conn))
 	msgChan <- nil
 	return

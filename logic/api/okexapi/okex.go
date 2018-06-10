@@ -21,7 +21,7 @@ func NewOkexApi() *OkexApi {
 	return oa
 }
 
-func (this *OkexApi) Start(contract string, table string, ttype string) error {
+func (this *OkexApi) Start(contract string, table string, ttype string, depth int, period string) error {
 	//check conn existence
 	key := this.getKey(contract, table, ttype)
 	if ok := this.checkExt(key); ok {
@@ -37,17 +37,23 @@ func (this *OkexApi) Start(contract string, table string, ttype string) error {
 	this.upstreamConns.Store(key, okexConn)
 	log.DEBUGF("[okexapi]upstream conn: %v", this.upstreamConns)
 	//start sub and health check
-	go this.Sub(contract, table, ttype, okexConn)
+	go this.Sub(contract, table, ttype, okexConn, depth, period)
 	return nil
 }
 
-func (this *OkexApi) generateQuotePushData(dataRes []DataResponse, market string, contract string, table string, ttype string) ([]byte, error) {
+func (this *OkexApi) generateQuotePushData(dataRes []DataResponse, market string, contract string, table string, ttype string, depth int) ([]byte, error) {
 	var (
 		dataPush DataPush
 	)
 	dataPush.Msg = "quote"
 	dataPush.Market = market
 	dataPush.Table = table
+	dataPush.Contract = contract
+	dataPush.Type = ttype
+	dataPush.Optional = Option{
+		Period: "",
+		Depth:  depth,
+	}
 	dataPush.Data = make([]QuotePush, 0)
 	for _, data := range dataRes {
 		var tmpQuotePush QuotePush
@@ -57,6 +63,7 @@ func (this *OkexApi) generateQuotePushData(dataRes []DataResponse, market string
 		tmpQuotePush.Contract = contract
 		tmpQuotePush.Type = ttype
 		dataPush.Data = append(dataPush.Data, tmpQuotePush)
+		dataPush.Channel = data.Channel
 	}
 	buf, err := json.Marshal(dataPush)
 	return buf, err
@@ -66,10 +73,32 @@ func (this *OkexApi) generateLoginPushData(dataCommonRes []DataCommonRes, market
 	var (
 		dataCommonPush DataCommonPush
 	)
-	dataCommonPush.Msg = "login"
+	dataCommonPush.Msg = "trade"
 	dataCommonPush.Table = table
+	dataCommonPush.Contract = contract
+	dataCommonPush.Type = ttype
+	dataCommonPush.Data = make([]interface{}, 0)
 	for _, data := range dataCommonRes {
 		dataCommonPush.Data = append(dataCommonPush.Data, data.Data)
+		dataCommonPush.Channel = data.Channel
+	}
+	buf, err := json.Marshal(dataCommonPush)
+	return buf, err
+}
+
+func (this *OkexApi) generateTickerPushData(dataCommonRes []DataCommonRes, market string, contract string, table string, ttype string) ([]byte, error) {
+	var (
+		dataCommonPush DataCommonPush
+	)
+	dataCommonPush.Msg = "quote"
+	dataCommonPush.Market = market
+	dataCommonPush.Table = table
+	dataCommonPush.Contract = contract
+	dataCommonPush.Type = ttype
+	dataCommonPush.Data = make([]interface{}, 0)
+	for _, data := range dataCommonRes {
+		dataCommonPush.Data = append(dataCommonPush.Data, data.Data)
+		dataCommonPush.Channel = data.Channel
 	}
 	buf, err := json.Marshal(dataCommonPush)
 	return buf, err
@@ -82,11 +111,13 @@ func (this *OkexApi) checkChannel(channel string) string {
 		return "login"
 	} else if strings.Index(channel, "depth") != -1 {
 		return "depth"
+	} else if strings.Index(channel, "ticker") != -1 {
+		return "ticker"
 	}
 	return ""
 }
 
-func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *OkexConn) {
+func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *OkexConn, depth int, period string) {
 	ticker := time.NewTicker(HEALTH_CHECK_TIME)
 	defer ticker.Stop()
 	var (
@@ -94,16 +125,17 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 		//ppRes         PingPongResponse
 		dataRes       []DataResponse
 		dataCommonRes []DataCommonRes
-		channelRes    []ChannelRes
 		buf           []byte
 		pushBuf       []byte
 	)
 	//sub process
 	switch table {
 	case apitypes.API_DATA_ORDERBOOK:
-		go this.SendFutureUsed(contract, ttype, okexConn.WsConn)
+		go this.SendFutureUsed(contract, ttype, okexConn.WsConn, depth)
 	case apitypes.API_DATA_LOGIN:
 		go this.SendLogin(okexConn.WsConn)
+	case apitypes.API_DATA_TICKER:
+		go this.SendFutureUsdTicker(contract, ttype, okexConn.WsConn)
 	default:
 		log.ERRORF("[okexapi]not found table %s", table)
 		return
@@ -164,7 +196,7 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 				go okexConn.Close()
 				this.upstreamConns.Store(key, newOkexConn)
 				//recursion
-				go this.Sub(contract, table, ttype, newOkexConn)
+				go this.Sub(contract, table, ttype, newOkexConn, depth, period)
 				return
 			}
 			//check event
@@ -175,12 +207,12 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 				break
 			}*/
 			//check channel
-			json.Unmarshal(buf, &channelRes)
-			if len(channelRes) == 0 {
+			json.Unmarshal(buf, &dataCommonRes)
+			if len(dataCommonRes) == 0 {
 				log.ERRORF("[okexapi]receive data empty")
 				break
 			}
-			log.DEBUG("[okexapi]data from okex:", channelRes)
+			log.DEBUG("[okexapi]data from okex:", dataCommonRes)
 			if okexManager, ok := conn.GConn.Load("okex"); ok {
 				log.DEBUG("[okexapi]start to dump okex client list")
 				cliLst := okexManager.(conn.ConnManager).DumpConns(contract, table, ttype)
@@ -199,10 +231,16 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 					}
 				} else if this.checkChannel(dataCommonRes[0].Channel) == "depth" {
 					json.Unmarshal(buf, &dataRes)
-					pushBuf, err = this.generateQuotePushData(dataRes, "okex", contract, table, ttype)
+					pushBuf, err = this.generateQuotePushData(dataRes, "okex", contract, table, ttype, depth)
 					if err != nil {
 						log.ERRORF("[okexapi]generate quote push data error: %v", err)
 						break
+					}
+				} else if this.checkChannel(dataCommonRes[0].Channel) == "ticker" {
+					json.Unmarshal(buf, &dataCommonRes)
+					pushBuf, err = this.generateTickerPushData(dataCommonRes, "okex", contract, table, ttype)
+					if err != nil {
+						log.ERRORF("[okexapi]generate ticker push data error: %v", err)
 					}
 				} else {
 					log.ERRORF("[okexapi]channel %s not found", dataCommonRes[0].Channel)
@@ -214,7 +252,7 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 					go func(buf []byte) {
 						_, err := cli.Conn.Write(buf)
 						if err != nil {
-							log.ERRORF("[okexapi_sub] send data to client error: %v, addr: %s, contract: %s, table: %s, type: %s", err, cli.RemoteAddr, contract, table, ttype)
+							log.ERRORF("[okexapi_sub] send data to client error: %v, addr: %s, contract: %s, table: %s, type: %s, depth: %d, period: %s", err, cli.RemoteAddr, contract, table, ttype, depth, period)
 						}
 					}(pushBuf)
 				}

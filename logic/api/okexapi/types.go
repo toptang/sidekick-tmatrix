@@ -11,7 +11,7 @@ var (
 	PROTO_WSS   = "wss"
 
 	//REST api
-	OKEX_API_SERVER  = "http://https://www.okex.com/api/v1"
+	OKEX_API_SERVER  = "https://www.okex.com/api/v1"
 	OKEX_TRADE_URI   = "/future_trade"
 	OKEX_UNTRADE_URI = "/future_cancel"
 )
@@ -27,8 +27,9 @@ var (
 
 //protocol uri
 var (
-	OKEX_OB    = "ok_sub_futureusd_%s_depth_%s_%d"
-	OKEX_TRADE = "ok_sub_futureusd_%s_trade_%s"
+	OKEX_OB     = "ok_sub_futureusd_%s_depth_%s_%d"
+	OKEX_TRADE  = "ok_sub_futureusd_%s_trade_%s"
+	OKEX_TICKER = "ok_sub_futureusd_%s_ticker_%s"
 )
 
 //-----------------
@@ -74,11 +75,20 @@ type QuotePush struct {
 	Type     string      `json:"type"`
 }
 
+type Option struct {
+	Period string `json:"period"`
+	Depth  int    `json:"depth"`
+}
+
 type DataPush struct {
-	Msg    string      `json:"msg"`
-	Market string      `json:"market"`
-	Table  string      `json:"table"`
-	Data   []QuotePush `json:"data"`
+	Msg      string      `json:"msg"`
+	Market   string      `json:"market"`
+	Table    string      `json:"table"`
+	Contract string      `json:"symbol"`
+	Type     string      `json:"type"`
+	Data     []QuotePush `json:"data"`
+	Optional Option      `json:"optional"`
+	Channel  string      `json:"channel"`
 }
 
 //-----------------
@@ -93,7 +103,12 @@ type DataCommonRes struct {
 }
 
 type DataCommonPush struct {
-	Msg   string `json:"msg"`
-	Table string `json:"table"`
-	Data  []interface{}
+	Msg      string        `json:"msg"`
+	Market   string        `json:"market"`
+	Table    string        `json:"table"`
+	Contract string        `json:"symbol"`
+	Type     string        `json:"type"`
+	Data     []interface{} `json:"data"`
+	Optional Option        `json:"optional"`
+	Channel  string        `json:"channel"`
 }

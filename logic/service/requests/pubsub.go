@@ -2,14 +2,20 @@ package requests
 
 import "xframe/log"
 
+type Option struct {
+	Depth  int    `json:"depth"`
+	Period string `json:"period"`
+}
+
 type PubSubReq struct {
 	Msg  string `json:"msg"`
 	Uuid string `json:"uuid"`
 	Data struct {
-		Market string `json:"market"`
-		Type   string `json:"type"`
-		Symbol string `json:"symbol"` //contract
-		Table  string `json:"table"`
+		Market   string `json:"market"`
+		Type     string `json:"type"`
+		Symbol   string `json:"symbol"` //contract
+		Table    string `json:"table"`
+		Optional Option `json:"optional"`
 	} `json:"data"`
 }
 
