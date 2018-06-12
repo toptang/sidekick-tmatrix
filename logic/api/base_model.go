@@ -3,6 +3,7 @@ package api
 import (
 	"sidekick/tmatrix/app"
 	"sidekick/tmatrix/logic/api/okexapi"
+	"sidekick/tmatrix/utils"
 	"sync"
 	"xframe/log"
 )
@@ -17,6 +18,7 @@ type BaseApi interface {
 
 func Init(config app.Config) {
 	if config.UpstreamConf.OkexConf.Enabled {
+		utils.InitOkexConfig(config.UpstreamConf.OkexConf)
 		log.DEBUG("load okex api")
 		okexApi := okexapi.NewOkexApi()
 		GApi.Store("okex", okexApi)

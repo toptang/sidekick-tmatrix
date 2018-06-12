@@ -8,13 +8,13 @@ type Option struct {
 }
 
 type PubSubReq struct {
-	Msg  string `json:"msg"`
-	Uuid string `json:"uuid"`
+	Msg  string `json:"msg"`  //action
+	Uuid string `json:"uuid"` //request id
 	Data struct {
-		Market   string `json:"market"`
-		Type     string `json:"type"`
-		Symbol   string `json:"symbol"` //contract
-		Table    string `json:"table"`
+		Market   string `json:"market"` //交易所
+		Type     string `json:"type"`   //货品: 现货/期货
+		Symbol   string `json:"symbol"` //合约
+		Table    string `json:"table"`  //数据类型
 		Optional Option `json:"optional"`
 	} `json:"data"`
 }

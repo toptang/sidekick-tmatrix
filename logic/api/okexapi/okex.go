@@ -2,7 +2,6 @@ package okexapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"sidekick/tmatrix/logic/api/apitypes"
 	"sidekick/tmatrix/logic/conn"
 	"strings"
@@ -41,84 +40,21 @@ func (this *OkexApi) Start(contract string, table string, ttype string, depth in
 	return nil
 }
 
-func (this *OkexApi) generateQuotePushData(dataRes []DataResponse, market string, contract string, table string, ttype string, depth int) ([]byte, error) {
-	var (
-		dataPush DataPush
-	)
-	dataPush.Msg = "quote"
-	dataPush.Market = market
-	dataPush.Table = table
-	dataPush.Contract = contract
-	dataPush.Type = ttype
-	dataPush.Optional = Option{
-		Period: "",
-		Depth:  depth,
-	}
-	dataPush.Data = make([]QuotePush, 0)
-	for _, data := range dataRes {
-		var tmpQuotePush QuotePush
-		tmpQuotePush.Ts = data.Data.Ts
-		tmpQuotePush.Asks = data.Data.Asks
-		tmpQuotePush.Bids = data.Data.Bids
-		tmpQuotePush.Contract = contract
-		tmpQuotePush.Type = ttype
-		dataPush.Data = append(dataPush.Data, tmpQuotePush)
-		dataPush.Channel = data.Channel
-	}
-	buf, err := json.Marshal(dataPush)
-	return buf, err
-}
-
-func (this *OkexApi) generateLoginPushData(dataCommonRes []DataCommonRes, market string, contract string, table string, ttype string) ([]byte, error) {
-	var (
-		dataCommonPush DataCommonPush
-	)
-	dataCommonPush.Msg = "trade"
-	dataCommonPush.Table = table
-	dataCommonPush.Contract = contract
-	dataCommonPush.Type = ttype
-	dataCommonPush.Data = make([]interface{}, 0)
-	for _, data := range dataCommonRes {
-		dataCommonPush.Data = append(dataCommonPush.Data, data.Data)
-		dataCommonPush.Channel = data.Channel
-	}
-	buf, err := json.Marshal(dataCommonPush)
-	return buf, err
-}
-
-func (this *OkexApi) generateTickerPushData(dataCommonRes []DataCommonRes, market string, contract string, table string, ttype string) ([]byte, error) {
-	var (
-		dataCommonPush DataCommonPush
-	)
-	dataCommonPush.Msg = "quote"
-	dataCommonPush.Market = market
-	dataCommonPush.Table = table
-	dataCommonPush.Contract = contract
-	dataCommonPush.Type = ttype
-	dataCommonPush.Data = make([]interface{}, 0)
-	for _, data := range dataCommonRes {
-		dataCommonPush.Data = append(dataCommonPush.Data, data.Data)
-		dataCommonPush.Channel = data.Channel
-	}
-	buf, err := json.Marshal(dataCommonPush)
-	return buf, err
-}
-
 func (this *OkexApi) checkChannel(channel string) string {
 	if channel == "ok_sub_futureusd_positions" ||
 		channel == "ok_sub_futureusd_trades" ||
 		channel == "ok_sub_futureusd_userinfo" {
-		return "login"
+		return apitypes.API_DATA_LOGIN
 	} else if strings.Index(channel, "depth") != -1 {
-		return "depth"
+		return apitypes.API_DATA_ORDERBOOK
 	} else if strings.Index(channel, "ticker") != -1 {
-		return "ticker"
+		return apitypes.API_DATA_TICKER
 	}
 	return ""
 }
 
 func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *OkexConn, depth int, period string) {
-	ticker := time.NewTicker(HEALTH_CHECK_TIME)
+	ticker := time.NewTicker(apitypes.HEALTH_CHECK_TIME)
 	defer ticker.Stop()
 	var (
 		key string = this.getKey(contract, table, ttype)
@@ -131,7 +67,7 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 	//sub process
 	switch table {
 	case apitypes.API_DATA_ORDERBOOK:
-		go this.SendFutureUsed(contract, ttype, okexConn.WsConn, depth)
+		go this.SendFutureUsd(contract, ttype, okexConn.WsConn, depth)
 	case apitypes.API_DATA_LOGIN:
 		go this.SendLogin(okexConn.WsConn)
 	case apitypes.API_DATA_TICKER:
@@ -221,28 +157,31 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 					okexConn.Close()
 					return
 				}
+				//TODO register callback for different push data
 				//generate push data
-				if this.checkChannel(dataCommonRes[0].Channel) == "login" {
-					json.Unmarshal(buf, &dataCommonRes)
-					pushBuf, err = this.generateLoginPushData(dataCommonRes, "okex", contract, table, ttype)
+				switch this.checkChannel(dataCommonRes[0].Channel) {
+				case apitypes.API_DATA_LOGIN:
+					//json.Unmarshal(buf, &dataCommonRes)
+					pushTable := this._getLoginTable(dataCommonRes[0].Channel)
+					pushBuf, err = this.generateLoginPushData(dataCommonRes, "okex", contract, pushTable, ttype)
 					if err != nil {
 						log.ERRORF("[okexapi]generate login push data error: %v", err)
 						break
 					}
-				} else if this.checkChannel(dataCommonRes[0].Channel) == "depth" {
+				case apitypes.API_DATA_ORDERBOOK:
 					json.Unmarshal(buf, &dataRes)
 					pushBuf, err = this.generateQuotePushData(dataRes, "okex", contract, table, ttype, depth)
 					if err != nil {
 						log.ERRORF("[okexapi]generate quote push data error: %v", err)
 						break
 					}
-				} else if this.checkChannel(dataCommonRes[0].Channel) == "ticker" {
-					json.Unmarshal(buf, &dataCommonRes)
+				case apitypes.API_DATA_TICKER:
+					//json.Unmarshal(buf, &dataCommonRes)
 					pushBuf, err = this.generateTickerPushData(dataCommonRes, "okex", contract, table, ttype)
 					if err != nil {
 						log.ERRORF("[okexapi]generate ticker push data error: %v", err)
 					}
-				} else {
+				default:
 					log.ERRORF("[okexapi]channel %s not found", dataCommonRes[0].Channel)
 					break
 				}
@@ -259,13 +198,4 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 			}
 		}
 	}
-}
-
-func (this *OkexApi) getKey(contract string, table string, ttype string) string {
-	return fmt.Sprintf("%s|%s|%s", contract, table, ttype)
-}
-
-func (this *OkexApi) checkExt(key string) (ok bool) {
-	_, ok = this.upstreamConns.Load(key)
-	return
 }

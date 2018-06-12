@@ -1,6 +1,7 @@
 package okexapi
 
 import (
+	"sidekick/tmatrix/logic/api/apitypes"
 	"time"
 	"xframe/server/websocket"
 )
@@ -36,7 +37,7 @@ func (this *OkexConn) SetHealthy() {
 }
 
 func (this *OkexConn) CheckHealth() bool {
-	return this.Health && time.Now().Unix()-this.HealthTime <= HEALTH_GAP
+	return this.Health && time.Now().Unix()-this.HealthTime <= apitypes.HEALTH_GAP
 }
 
 func (this *OkexConn) SetUnhealthy() {
@@ -44,7 +45,7 @@ func (this *OkexConn) SetUnhealthy() {
 }
 
 func (this *OkexConn) UnHealthCount() bool {
-	return this.HealthCount > HEALTH_CHECK_RETRY
+	return this.HealthCount > apitypes.HEALTH_CHECK_RETRY
 }
 
 func (this *OkexConn) SetRetry() {

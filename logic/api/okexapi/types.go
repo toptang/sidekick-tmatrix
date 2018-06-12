@@ -1,7 +1,5 @@
 package okexapi
 
-import "time"
-
 //basic fixed config
 var (
 	//websocket
@@ -16,15 +14,6 @@ var (
 	OKEX_UNTRADE_URI = "/future_cancel"
 )
 
-var (
-	DEFAULT_PERIOD = "this_week"
-	DEFAULT_DEPTH  = 5
-
-	HEALTH_CHECK_TIME        = 30 * time.Second
-	HEALTH_CHECK_RETRY       = 3
-	HEALTH_GAP         int64 = 40
-)
-
 //protocol uri
 var (
 	OKEX_OB     = "ok_sub_futureusd_%s_depth_%s_%d"
@@ -37,6 +26,10 @@ type PingPongRequest struct {
 	Event string `json:"event"`
 }
 
+type PingPongResponse struct {
+	Event string `json:"event"`
+}
+
 //-----------------
 type Param struct {
 	ApiKey string `json:"api_key"`
@@ -46,12 +39,7 @@ type Param struct {
 type DataRequest struct {
 	Event   string `json:"event"`
 	Channel string `json:"channel"`
-	Params  Param  `json:"params"`
-}
-
-//-----------------
-type PingPongResponse struct {
-	Event string `json:"event"`
+	Params  Param  `json:"parameters"`
 }
 
 //-----------------
@@ -66,7 +54,6 @@ type Quote struct {
 	Bids interface{} `json:"bids"`
 }
 
-//-----------------
 type QuotePush struct {
 	Ts       int64       `json:"ts"`
 	Asks     interface{} `json:"asks"`
@@ -88,7 +75,6 @@ type DataPush struct {
 	Type     string      `json:"type"`
 	Data     []QuotePush `json:"data"`
 	Optional Option      `json:"optional"`
-	Channel  string      `json:"channel"`
 }
 
 //-----------------
@@ -110,5 +96,4 @@ type DataCommonPush struct {
 	Type     string        `json:"type"`
 	Data     []interface{} `json:"data"`
 	Optional Option        `json:"optional"`
-	Channel  string        `json:"channel"`
 }
