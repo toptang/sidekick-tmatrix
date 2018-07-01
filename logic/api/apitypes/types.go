@@ -6,6 +6,9 @@ var (
 	API_DATA_ORDERBOOK = "orderbook"
 	API_DATA_LOGIN     = "login"
 	API_DATA_TICKER    = "ticker"
+
+	API_DATA_SPOT_ORDERBOOK = "spot_orderbook"
+	API_DATA_SPOT_TICKER    = "spot_ticker"
 )
 
 //health check

@@ -19,6 +19,9 @@ var (
 	OKEX_OB     = "ok_sub_futureusd_%s_depth_%s_%d"
 	OKEX_TRADE  = "ok_sub_futureusd_%s_trade_%s"
 	OKEX_TICKER = "ok_sub_futureusd_%s_ticker_%s"
+
+	OKEX_SPOT_OB     = "ok_sub_spot_%s_depth_%s"
+	OKEX_SPOT_TICKER = "ok_sub_spot_%s_ticker"
 )
 
 //-----------------

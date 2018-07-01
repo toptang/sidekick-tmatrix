@@ -23,25 +23,22 @@ func main() {
 	cmd.DumpCommand()
 
 	//init configuration
-	var app app.Config
-	err := config.LoadConfigFromFileV2(&app, *conf)
+	var appConf app.Config
+	err := config.LoadConfigFromFileV2(&appConf, *conf)
 
 	//TODO  use errd
 	if err != nil {
 		panic(fmt.Sprintf("Load configuration error: %v", err))
 	}
 
-	//init http service conf
-	utils.InitHttp(app.HttpConf)
-
-	//init log
-	utils.InitLog(app.LogConf)
+	//init config
+	app.InitApp(appConf)
 
 	//init conn manager
-	conn.Init(app)
+	conn.Init(appConf)
 
 	//init api manager
-	api.Init(app)
+	api.Init(appConf)
 
 	//start service
 	if err = server.RunHTTP(utils.GetHttpAddr(), utils.GetHttpPort()); err != nil {

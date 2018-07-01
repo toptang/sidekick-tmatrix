@@ -12,8 +12,8 @@ var (
 
 func InitOkexConfig(OkexConf OkexConfig) {
 	okexConfig = OkexConf
-	if okexConfig.ApiKey == "" ||
-		okexConfig.ApiSecret == "" {
+	if okexConfig.ApiKey == EMPTY_STR ||
+		okexConfig.ApiSecret == EMPTY_STR {
 		panic("okex config error")
 	}
 }

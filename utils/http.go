@@ -11,8 +11,8 @@ var (
 
 func InitHttp(httpConf HttpConfig) {
 	httpConfig = &httpConf
-	if httpConfig.Addr == "" ||
-		httpConfig.Port == 0 {
+	if httpConfig.Addr == EMPTY_STR ||
+		httpConfig.Port == EMPTY_INT {
 		panic("http service config error")
 	}
 }

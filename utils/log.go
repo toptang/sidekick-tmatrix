@@ -8,7 +8,7 @@ type LogConfig struct {
 
 //default: using stdout
 func InitLog(logConf LogConfig) {
-	if logConf.LogLevel == "" {
+	if logConf.LogLevel == EMPTY_STR {
 		panic("log configuration error")
 	}
 	log.InitLogger("", "", "", 0, logConf.LogLevel, "stdout")

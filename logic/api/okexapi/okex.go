@@ -3,6 +3,7 @@ package okexapi
 import (
 	"encoding/json"
 	"sidekick/tmatrix/logic/api/apitypes"
+	"sidekick/tmatrix/logic/api/model"
 	"sidekick/tmatrix/logic/conn"
 	"strings"
 	"sync"
@@ -13,11 +14,19 @@ import (
 
 type OkexApi struct {
 	upstreamConns sync.Map
+	model.BaseModel
 }
 
 func NewOkexApi() *OkexApi {
 	oa := new(OkexApi)
 	return oa
+}
+
+func (this *OkexApi) Init(contract string, table string, ttype string) {
+	this.Market = "okex"
+	this.Symbol = contract
+	this.Table = table
+	this.Type = ttype
 }
 
 func (this *OkexApi) Start(contract string, table string, ttype string, depth int, period string) error {
@@ -36,7 +45,8 @@ func (this *OkexApi) Start(contract string, table string, ttype string, depth in
 	this.upstreamConns.Store(key, okexConn)
 	log.DEBUGF("[okexapi]upstream conn: %v", this.upstreamConns)
 	//start sub and health check
-	go this.Sub(contract, table, ttype, okexConn, depth, period)
+	this.Init(contract, table, ttype)
+	go this.Sub(okexConn, depth, period, key)
 	return nil
 }
 
@@ -45,19 +55,22 @@ func (this *OkexApi) checkChannel(channel string) string {
 		channel == "ok_sub_futureusd_trades" ||
 		channel == "ok_sub_futureusd_userinfo" {
 		return apitypes.API_DATA_LOGIN
-	} else if strings.Index(channel, "depth") != -1 {
+	} else if strings.Index(channel, "futureusd") != -1 && strings.Index(channel, "depth") != -1 {
 		return apitypes.API_DATA_ORDERBOOK
-	} else if strings.Index(channel, "ticker") != -1 {
+	} else if strings.Index(channel, "futureusd") != -1 && strings.Index(channel, "ticker") != -1 {
 		return apitypes.API_DATA_TICKER
+	} else if strings.Index(channel, "spot") != -1 && strings.Index(channel, "ticker") != -1 {
+		return apitypes.API_DATA_SPOT_TICKER
+	} else if strings.Index(channel, "spot") != -1 && strings.Index(channel, "depth") != -1 {
+		return apitypes.API_DATA_SPOT_ORDERBOOK
 	}
 	return ""
 }
 
-func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *OkexConn, depth int, period string) {
+func (this *OkexApi) Sub(okexConn *OkexConn, depth int, period string, key string) {
 	ticker := time.NewTicker(apitypes.HEALTH_CHECK_TIME)
 	defer ticker.Stop()
 	var (
-		key string = this.getKey(contract, table, ttype)
 		//ppRes         PingPongResponse
 		dataRes       []DataResponse
 		dataCommonRes []DataCommonRes
@@ -65,15 +78,19 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 		pushBuf       []byte
 	)
 	//sub process
-	switch table {
+	switch this.Table {
 	case apitypes.API_DATA_ORDERBOOK:
-		go this.SendFutureUsd(contract, ttype, okexConn.WsConn, depth)
+		go this.SendFutureUsd(okexConn.WsConn, depth)
 	case apitypes.API_DATA_LOGIN:
 		go this.SendLogin(okexConn.WsConn)
 	case apitypes.API_DATA_TICKER:
-		go this.SendFutureUsdTicker(contract, ttype, okexConn.WsConn)
+		go this.SendFutureUsdTicker(okexConn.WsConn)
+	case apitypes.API_DATA_SPOT_ORDERBOOK:
+		go this.SendSpotOrderbook(okexConn.WsConn, depth)
+	case apitypes.API_DATA_SPOT_TICKER:
+		go this.SendSpotTicker(okexConn.WsConn)
 	default:
-		log.ERRORF("[okexapi]not found table %s", table)
+		log.ERRORF("[okexapi]not found table %s", this.Table)
 		return
 	}
 	for {
@@ -116,7 +133,7 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 			//data channel
 			err := websocket.Message.Receive(okexConn.WsConn, &buf)
 			if err != nil {
-				log.ERRORF("[okexapi_sub]receive for %s-%s-%s error: %v", contract, table, ttype, err)
+				log.ERRORF("[okexapi_sub]receive for %s-%s-%s error: %v", this.Symbol, this.Table, this.Type, err)
 				var (
 					newOkexConn = NewOkexConn()
 					err         error
@@ -132,7 +149,7 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 				go okexConn.Close()
 				this.upstreamConns.Store(key, newOkexConn)
 				//recursion
-				go this.Sub(contract, table, ttype, newOkexConn, depth, period)
+				go this.Sub(newOkexConn, depth, period, key)
 				return
 			}
 			//check event
@@ -151,7 +168,7 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 			log.DEBUG("[okexapi]data from okex:", dataCommonRes)
 			if okexManager, ok := conn.GConn.Load("okex"); ok {
 				log.DEBUG("[okexapi]start to dump okex client list")
-				cliLst := okexManager.(conn.ConnManager).DumpConns(contract, table, ttype)
+				cliLst := okexManager.(conn.ConnManager).DumpConns(this.Symbol, this.Table, this.Type)
 				if len(cliLst) == 0 {
 					this.upstreamConns.Delete(key)
 					okexConn.Close()
@@ -163,23 +180,34 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 				case apitypes.API_DATA_LOGIN:
 					//json.Unmarshal(buf, &dataCommonRes)
 					pushTable := this._getLoginTable(dataCommonRes[0].Channel)
-					pushBuf, err = this.generateLoginPushData(dataCommonRes, "okex", contract, pushTable, ttype)
+					pushBuf, err = this.generateLoginPushData(dataCommonRes, pushTable)
 					if err != nil {
 						log.ERRORF("[okexapi]generate login push data error: %v", err)
 						break
 					}
 				case apitypes.API_DATA_ORDERBOOK:
 					json.Unmarshal(buf, &dataRes)
-					pushBuf, err = this.generateQuotePushData(dataRes, "okex", contract, table, ttype, depth)
+					pushBuf, err = this.generateQuotePushData(dataRes, depth)
 					if err != nil {
 						log.ERRORF("[okexapi]generate quote push data error: %v", err)
 						break
 					}
 				case apitypes.API_DATA_TICKER:
 					//json.Unmarshal(buf, &dataCommonRes)
-					pushBuf, err = this.generateTickerPushData(dataCommonRes, "okex", contract, table, ttype)
+					pushBuf, err = this.generateTickerPushData(dataCommonRes)
 					if err != nil {
 						log.ERRORF("[okexapi]generate ticker push data error: %v", err)
+					}
+				case apitypes.API_DATA_SPOT_TICKER:
+					pushBuf, err = this.generateSpotTickerPushData(dataCommonRes)
+					if err != nil {
+						log.ERRORF("[okexapi]generate spot ticker push data error: %v", err)
+					}
+				case apitypes.API_DATA_SPOT_ORDERBOOK:
+					json.Unmarshal(buf, &dataRes)
+					pushBuf, err = this.generateSpotOrderbookPushData(dataRes, depth)
+					if err != nil {
+						log.ERRORF("[okexapi]generate spot orderbook push data error: %v", err)
 					}
 				default:
 					log.ERRORF("[okexapi]channel %s not found", dataCommonRes[0].Channel)
@@ -191,7 +219,8 @@ func (this *OkexApi) Sub(contract string, table string, ttype string, okexConn *
 					go func(buf []byte) {
 						_, err := cli.Conn.Write(buf)
 						if err != nil {
-							log.ERRORF("[okexapi_sub] send data to client error: %v, addr: %s, contract: %s, table: %s, type: %s, depth: %d, period: %s", err, cli.RemoteAddr, contract, table, ttype, depth, period)
+							//TODO remove client
+							log.ERRORF("[okexapi_sub] send data to client error: %v, addr: %s, contract: %s, table: %s, type: %s, depth: %d, period: %s", err, cli.RemoteAddr, this.Symbol, this.Table, this.Type, depth, period)
 						}
 					}(pushBuf)
 				}

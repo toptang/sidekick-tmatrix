@@ -9,3 +9,11 @@ type Config struct {
 		OkexConf utils.OkexConfig `json:"okex"`
 	} `json:"upstream"`
 }
+
+func InitApp(app Config) {
+	//init http service conf
+	utils.InitHttp(app.HttpConf)
+
+	//init log
+	utils.InitLog(app.LogConf)
+}

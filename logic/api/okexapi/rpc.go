@@ -1,84 +1,38 @@
 package okexapi
 
 import (
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"io"
 	"sidekick/tmatrix/utils"
-	"sort"
-	"strings"
 	"xframe/log"
 	"xframe/server/websocket"
 )
 
 //-------------------------
-//push
-func (this *OkexApi) generateQuotePushData(dataRes []DataResponse, market string, contract string, table string, ttype string, depth int) ([]byte, error) {
-	var (
-		dataPush DataPush
-	)
-	dataPush.Msg = "quote"
-	dataPush.Market = market
-	dataPush.Table = table
-	dataPush.Contract = contract
-	dataPush.Type = ttype
-	dataPush.Optional = Option{
-		Period: "",
-		Depth:  depth,
-	}
-	dataPush.Data = make([]QuotePush, 0)
-	for _, data := range dataRes {
-		var tmpQuotePush QuotePush
-		tmpQuotePush.Ts = data.Data.Ts
-		tmpQuotePush.Asks = data.Data.Asks
-		tmpQuotePush.Bids = data.Data.Bids
-		//tmpQuotePush.Contract = contract
-		//tmpQuotePush.Type = ttype
-		dataPush.Data = append(dataPush.Data, tmpQuotePush)
-		//dataPush.Channel = data.Channel
-	}
-	buf, err := json.Marshal(dataPush)
-	return buf, err
+//push to client
+func (this *OkexApi) generateQuotePushData(dataRes []DataResponse, depth int) ([]byte, error) {
+	return this.generateCommonQuoteData("quote", dataRes, depth)
 }
 
-func (this *OkexApi) generateLoginPushData(dataCommonRes []DataCommonRes, market string, contract string, table string, ttype string) ([]byte, error) {
-	var (
-		dataCommonPush DataCommonPush
-	)
-	dataCommonPush.Msg = "trade"
-	dataCommonPush.Table = table
-	dataCommonPush.Contract = contract
-	dataCommonPush.Type = ttype
-	dataCommonPush.Data = make([]interface{}, 0)
-	//structure抽象
-	for _, data := range dataCommonRes {
-		dataCommonPush.Data = append(dataCommonPush.Data, data.Data)
-	}
-	buf, err := json.Marshal(dataCommonPush)
-	return buf, err
+func (this *OkexApi) generateLoginPushData(dataCommonRes []DataCommonRes, pushTable string) ([]byte, error) {
+	return this.generateCommonData("trade", dataCommonRes, pushTable)
 }
 
-func (this *OkexApi) generateTickerPushData(dataCommonRes []DataCommonRes, market string, contract string, table string, ttype string) ([]byte, error) {
-	var (
-		dataCommonPush DataCommonPush
-	)
-	dataCommonPush.Msg = "quote"
-	dataCommonPush.Market = market
-	dataCommonPush.Table = table
-	dataCommonPush.Contract = contract
-	dataCommonPush.Type = ttype
-	dataCommonPush.Data = make([]interface{}, 0)
-	//TODO structure抽象
-	for _, data := range dataCommonRes {
-		dataCommonPush.Data = append(dataCommonPush.Data, data.Data)
-	}
-	buf, err := json.Marshal(dataCommonPush)
-	return buf, err
+func (this *OkexApi) generateTickerPushData(dataCommonRes []DataCommonRes) ([]byte, error) {
+	return this.generateCommonData("quote", dataCommonRes, this.Table)
+}
+
+func (this *OkexApi) generateSpotTickerPushData(dataCommonRes []DataCommonRes) ([]byte, error) {
+	return this.generateCommonData("spot_quote", dataCommonRes, this.Table)
+}
+
+func (this *OkexApi) generateSpotOrderbookPushData(dataRes []DataResponse, depth int) ([]byte, error) {
+	return this.generateCommonQuoteData("spot_quote", dataRes, depth)
 }
 
 //---------------------------------------------
-// request
+// request to okex
+// 合约交易
 func (this *OkexApi) SendPingPong(wsConn *websocket.Conn) {
 	ppReq := PingPongRequest{
 		Event: "ping",
@@ -87,7 +41,7 @@ func (this *OkexApi) SendPingPong(wsConn *websocket.Conn) {
 	wsConn.Write(buf)
 }
 
-func (this *OkexApi) SendFutureUsd(contract string, ttype string, wsConn *websocket.Conn, depth int) {
+func (this *OkexApi) SendFutureUsd(wsConn *websocket.Conn, depth int) {
 	//signature
 	params := map[string]string{
 		"api_key": utils.GetOkexKey(),
@@ -99,14 +53,14 @@ func (this *OkexApi) SendFutureUsd(contract string, ttype string, wsConn *websoc
 	}
 	dataReq := DataRequest{
 		Event:   "addChannel",
-		Channel: fmt.Sprintf(OKEX_OB, contract, ttype, depth),
+		Channel: fmt.Sprintf(OKEX_OB, this.Symbol, this.Type, depth),
 		Params:  param,
 	}
 	buf, _ := json.Marshal(dataReq)
 	wsConn.Write(buf)
 }
 
-func (this *OkexApi) SendFutureUsdTicker(contract string, ttype string, wsConn *websocket.Conn) {
+func (this *OkexApi) SendFutureUsdTicker(wsConn *websocket.Conn) {
 	params := map[string]string{
 		"api_key": utils.GetOkexKey(),
 	}
@@ -117,7 +71,7 @@ func (this *OkexApi) SendFutureUsdTicker(contract string, ttype string, wsConn *
 	}
 	dataReq := DataRequest{
 		Event:   "addChannel",
-		Channel: fmt.Sprintf(OKEX_TICKER, contract, ttype),
+		Channel: fmt.Sprintf(OKEX_TICKER, this.Symbol, this.Type),
 		Params:  param,
 	}
 	log.DEBUG(dataReq)
@@ -143,21 +97,41 @@ func (this *OkexApi) SendLogin(wsConn *websocket.Conn) {
 	wsConn.Write(buf)
 }
 
-func (this *OkexApi) Sign(params map[string]string, api_secret string) string {
-	var (
-		keyLst     = make([]string, 0)
-		sortParams string
-	)
-	for key, _ := range params {
-		keyLst = append(keyLst, key)
+//---------------------------------------------
+// request to okex
+// 现货交易
+func (this *OkexApi) SendSpotTicker(wsConn *websocket.Conn) {
+	params := map[string]string{
+		"api_key": utils.GetOkexKey(),
 	}
-	sort.Strings(keyLst)
-	for _, key := range keyLst {
-		sortParams += key + "=" + params[key] + "&"
+	sign := this.Sign(params, utils.GetOkexSecret())
+	param := Param{
+		ApiKey: utils.GetOkexKey(),
+		Sign:   sign,
 	}
-	sortParams += "secret_key=" + api_secret
-	h := md5.New()
-	io.WriteString(h, sortParams)
-	sign := strings.ToUpper(fmt.Sprintf("%x", h.Sum(nil)))
-	return sign
+	dataReq := DataRequest{
+		Event:   "addChannel",
+		Channel: fmt.Sprintf(OKEX_SPOT_TICKER, this.Symbol),
+		Params:  param,
+	}
+	buf, _ := json.Marshal(dataReq)
+	wsConn.Write(buf)
+}
+
+func (this *OkexApi) SendSpotOrderbook(wsConn *websocket.Conn, depth int) {
+	params := map[string]string{
+		"api_key": utils.GetOkexKey(),
+	}
+	sign := this.Sign(params, utils.GetOkexSecret())
+	param := Param{
+		ApiKey: utils.GetOkexKey(),
+		Sign:   sign,
+	}
+	dataReq := DataRequest{
+		Event:   "addChannel",
+		Channel: fmt.Sprintf(OKEX_SPOT_OB, this.Symbol, depth),
+		Params:  param,
+	}
+	buf, _ := json.Marshal(dataReq)
+	wsConn.Write(buf)
 }
